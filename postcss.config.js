@@ -1,6 +1,6 @@
 module.exports = {
   plugins: {
-    "@tailwindcss/postcss": {},   // ✅ use new plugin package
+    "@tailwindcss/postcss": {}, // ✅ required for Next.js 15 + Tailwind
     autoprefixer: {},
   },
 }
