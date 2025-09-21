@@ -30,7 +30,8 @@ export default function Page() {
           type,
           area,
           parking,
-          status: status.trim() as Unit["status"],
+          // trim spaces + normalize case
+          status: status.trim().replace(/\r/g, "") as Unit["status"],
         };
       });
       setUnits(parsed);
