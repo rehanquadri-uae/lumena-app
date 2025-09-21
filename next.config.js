@@ -5,9 +5,7 @@ const nextConfig = {
   images: {
     domains: [], // add domains here if you fetch images externally
   },
-  experimental: {
-    optimizeCss: true,
-  },
+
 };
 
 module.exports = nextConfig;
