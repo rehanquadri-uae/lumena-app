@@ -1,8 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 
+// Google Sheet CSV link
 const CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTWv3b8HTs_2dVSAul-NwDABv3cIlDgYJBFKcdoWNpXS7N9WX42Fs3QEsWcyimgF-8K5NoD2SUyR41V/pub?output=csv";
+
+type Status = "available" | "on hold" | "booked" | "sold";
 
 type Unit = {
   unit: string;
@@ -10,58 +13,68 @@ type Unit = {
   type: string;
   area: string;
   parking: string;
-  status: "Available" | "On Hold" | "Booked" | "Sold";
+  status: Status;
 };
 
 export default function Page() {
   const [units, setUnits] = useState<Unit[]>([]);
+  const [mounted, setMounted] = useState(false); // avoid hydration warning
+
+  // avoid SSR/client mismatch
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     async function fetchCSV() {
-      const response = await fetch(CSV_URL);
-      const text = await response.text();
+      const res = await fetch(CSV_URL, { cache: "no-store" });
+      const text = await res.text();
 
       const rows = text.trim().split("\n").slice(1); // skip header
-      const parsed = rows.map((row) => {
+      const parsed: Unit[] = rows.map((row) => {
+        // NOTE: if your sheet ever contains commas inside quotes, we can swap to a real CSV parser.
         const [unit, floor, type, area, parking, status] = row.split(",");
         return {
-          unit,
-          floor: parseInt(floor, 10),
-          type,
-          area,
-          parking,
-          // trim spaces + normalize case
-          status: status.trim().replace(/\r/g, "") as Unit["status"],
+          unit: (unit || "").trim(),
+          floor: parseInt((floor || "0").trim(), 10),
+          type: (type || "").trim(),
+          area: (area || "").trim(),
+          parking: (parking || "").trim(),
+          // 🔑 normalize: trim + remove \r + lowercase
+          status: ((status || "").trim().replace(/\r/g, "").toLowerCase() ||
+            "available") as Status,
         };
       });
+
       setUnits(parsed);
     }
 
     fetchCSV();
+    const id = setInterval(fetchCSV, 30000); // auto-refresh every 30s
+    return () => clearInterval(id);
   }, []);
+
+  // Counters (compare in lowercase)
+  const counters = {
+    Available: units.filter((u) => u.status === "available").length,
+    "On Hold": units.filter((u) => u.status === "on hold").length,
+    Booked: units.filter((u) => u.status === "booked").length,
+    Sold: units.filter((u) => u.status === "sold").length,
+  };
+
+  // Colors keyed by lowercase statuses
+  const colors: Record<Status, string> = {
+    available: "bg-green-500 text-white",
+    "on hold": "bg-amber-400 text-black",
+    booked: "bg-blue-500 text-white",
+    sold: "bg-red-600 text-white",
+  };
 
   // Group by floor
   const grouped: Record<number, Unit[]> = units.reduce((acc, u) => {
-    if (!acc[u.floor]) acc[u.floor] = [];
-    acc[u.floor].push(u);
+    (acc[u.floor] ||= []).push(u);
     return acc;
   }, {} as Record<number, Unit[]>);
 
-  // Status counters
-  const counters = {
-    Available: units.filter((u) => u.status === "Available").length,
-    "On Hold": units.filter((u) => u.status === "On Hold").length,
-    Booked: units.filter((u) => u.status === "Booked").length,
-    Sold: units.filter((u) => u.status === "Sold").length,
-  };
-
-  // Color map
-  const colors: Record<Unit["status"], string> = {
-    Available: "bg-green-500 text-white",
-    "On Hold": "bg-amber-400 text-black",
-    Booked: "bg-blue-500 text-white",
-    Sold: "bg-red-600 text-white",
-  };
+  if (!mounted) return null;
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
@@ -85,9 +98,16 @@ export default function Page() {
 
       {/* Legend */}
       <div className="flex gap-4 mb-6 text-sm">
-        {Object.entries(colors).map(([label, cls]) => (
-          <div key={label} className="flex items-center gap-1">
-            <span className={`w-3 h-3 rounded-full ${cls}`} />
+        {(
+          [
+            ["Available", "available"],
+            ["On Hold", "on hold"],
+            ["Booked", "booked"],
+            ["Sold", "sold"],
+          ] as const
+        ).map(([label, key]) => (
+          <div key={key} className="flex items-center gap-1">
+            <span className={`w-3 h-3 rounded-full ${colors[key]}`} />
             {label}
           </div>
         ))}
@@ -96,14 +116,14 @@ export default function Page() {
       {/* Floors */}
       <div className="space-y-8">
         {Object.keys(grouped)
-          .sort((a, b) => Number(b) - Number(a)) // highest floor first
+          .map(Number)
+          .sort((a, b) => b - a) // highest floor first
           .map((floor) => (
-            <div key={floor}>
+            <section key={floor}>
               <h2 className="text-xl font-semibold mb-2">Floor {floor}</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {grouped[Number(floor)].map((u) => {
-                  const isLocked =
-                    u.status === "Sold" || u.status === "Booked";
+                {grouped[floor].map((u) => {
+                  const isLocked = u.status === "sold" || u.status === "booked";
                   return (
                     <div
                       key={u.unit}
@@ -123,7 +143,7 @@ export default function Page() {
                   );
                 })}
               </div>
-            </div>
+            </section>
           ))}
       </div>
     </main>
