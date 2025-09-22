@@ -55,6 +55,7 @@ export default function Page() {
 
         setUnits(parsed);
         setError(null);
+        console.log("✅ Parsed units:", parsed); // helpful for debugging
       } catch (err) {
         console.error("CSV fetch error:", err);
         setError("⚠️ Failed to load data. Please check the Google Sheet URL.");
@@ -150,8 +151,8 @@ export default function Page() {
                 }}
               >
                 {grouped[floor].map((u) => {
-                  const borderClass = colors[u.status].split(" ")[0]; // border-...
-                  const textClass = colors[u.status].split(" ")[1]; // text-...
+                  const color = colors[u.status] || "border-gray-400 text-gray-600";
+                  const [borderClass, textClass] = color.split(" ");
 
                   return (
                     <div
@@ -203,7 +204,7 @@ export default function Page() {
             </p>
             <p>
               <strong>Status:</strong>{" "}
-              <span className={`${colors[selectedUnit.status]}`}>
+              <span className={`${colors[selectedUnit.status] || "text-gray-600"}`}>
                 {selectedUnit.status.toUpperCase()}
               </span>
             </p>
