@@ -19,10 +19,13 @@ export default function Page() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return; // ✅ Only run in browser, not on Vercel SSR
+
     async function fetchCSV() {
       try {
         const res = await fetch(CSV_URL, { cache: "no-store" });
@@ -45,11 +48,13 @@ export default function Page() {
               status: (status.trim().toLowerCase() || "available") as Status,
             };
           })
-          .filter(Boolean) as Unit[];
+          .filter((u): u is Unit => u !== null);
 
         setUnits(parsed);
+        setError(null);
       } catch (err) {
         console.error("CSV fetch error:", err);
+        setError("⚠️ Failed to load data. Please check the Google Sheet URL.");
       }
     }
 
@@ -57,6 +62,16 @@ export default function Page() {
   }, []);
 
   if (!mounted) return <div className="p-6">Loading app...</div>;
+
+  if (error) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="text-red-600 p-4 bg-white rounded shadow">
+          {error}
+        </div>
+      </main>
+    );
+  }
 
   // Counters
   const counters = {
