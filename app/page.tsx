@@ -1,4 +1,7 @@
 "use client";
+
+export const dynamic = "force-dynamic"; // ✅ Ensure client-side only rendering on Vercel
+
 import { useEffect, useState } from "react";
 
 const CSV_URL =
@@ -24,7 +27,7 @@ export default function Page() {
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return; // ✅ Only run in browser, not on Vercel SSR
+    if (typeof window === "undefined") return; // ✅ only run client-side
 
     async function fetchCSV() {
       try {
@@ -81,6 +84,7 @@ export default function Page() {
     Sold: units.filter((u) => u.status === "sold").length,
   };
 
+  // Color map: border + text
   const colors: Record<Status, string> = {
     available: "border-green-600 text-green-600",
     "on hold": "border-amber-500 text-amber-500",
@@ -145,19 +149,22 @@ export default function Page() {
                   gridTemplateColumns: `repeat(${grouped[floor].length}, minmax(0, 1fr))`,
                 }}
               >
-                {grouped[floor].map((u) => (
-                  <div
-                    key={u.unit}
-                    onClick={() =>
-                      u.status === "available" && setSelectedUnit(u)
-                    }
-                    className={`p-6 rounded-lg shadow-md text-center cursor-pointer bg-[#F5F5DC] border-2 ${
-                      colors[u.status]
-                    }`}
-                  >
-                    <div className="font-bold">{u.unit}</div>
-                  </div>
-                ))}
+                {grouped[floor].map((u) => {
+                  const borderClass = colors[u.status].split(" ")[0]; // border-...
+                  const textClass = colors[u.status].split(" ")[1]; // text-...
+
+                  return (
+                    <div
+                      key={u.unit}
+                      onClick={() =>
+                        u.status === "available" && setSelectedUnit(u)
+                      }
+                      className={`p-6 rounded-lg shadow-md text-center cursor-pointer bg-[#F5F5DC] border-2 ${borderClass}`}
+                    >
+                      <div className={`font-bold ${textClass}`}>{u.unit}</div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           ))}
@@ -196,7 +203,7 @@ export default function Page() {
             </p>
             <p>
               <strong>Status:</strong>{" "}
-              <span className={colors[selectedUnit.status]}>
+              <span className={`${colors[selectedUnit.status]}`}>
                 {selectedUnit.status.toUpperCase()}
               </span>
             </p>
