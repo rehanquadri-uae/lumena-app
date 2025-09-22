@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 const CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTWv3b8HTs_2dVSAul-NwDABv3cIlDgYJBFKcdoWNpXS7N9WX42Fs3QEsWcyimgF-8K5NoD2SUyR41V/pub?output=csv";
 
+// Status types (all lowercase for consistency)
 type Status = "available" | "on hold" | "booked" | "sold";
 
 type Unit = {
@@ -13,6 +14,22 @@ type Unit = {
   area: string;
   parking: string;
   status: Status;
+};
+
+// Mapping lowercase → pretty label
+const labels: Record<Status, string> = {
+  available: "Available",
+  "on hold": "On Hold",
+  booked: "Booked",
+  sold: "Sold",
+};
+
+// Colors for each status
+const colors: Record<Status, string> = {
+  available: "bg-green-500 text-white",
+  "on hold": "bg-amber-400 text-black",
+  booked: "bg-blue-500 text-white",
+  sold: "bg-red-600 text-white",
 };
 
 export default function Page() {
@@ -31,25 +48,38 @@ export default function Page() {
         const text = await res.text();
         const rows = text.trim().split("\n").slice(1);
 
-        const parsed: Unit[] = rows.map((row) => {
-          const cols = row.split(",");
-          if (cols.length < 6) {
-            console.warn("Skipping malformed row:", row);
-            return null;
-          }
-          const [unit, floor, type, area, parking, status] = cols;
-          return {
-            unit: (unit || "").trim(),
-            floor: parseInt((floor || "0").trim(), 10),
-            type: (type || "").trim(),
-            area: (area || "").trim(),
-            parking: (parking || "").trim(),
-            status: ((status || "")
+        const parsed: Unit[] = rows
+          .map((row) => {
+            const cols = row.split(",");
+            if (cols.length < 6) return undefined;
+            const [unit, floor, type, area, parking, status] = cols;
+
+            const normalized = (status || "")
               .trim()
               .replace(/\r/g, "")
-              .toLowerCase() || "available") as Status,
-          };
-        }).filter(Boolean) as Unit[];
+              .toLowerCase() as Status;
+
+            // Validate against known statuses
+            const validStatuses: Status[] = [
+              "available",
+              "on hold",
+              "booked",
+              "sold",
+            ];
+            const finalStatus: Status = validStatuses.includes(normalized)
+              ? normalized
+              : "available";
+
+            return {
+              unit: (unit || "").trim(),
+              floor: parseInt((floor || "0").trim(), 10),
+              type: (type || "").trim(),
+              area: (area || "").trim(),
+              parking: (parking || "").trim(),
+              status: finalStatus,
+            };
+          })
+          .filter((u): u is Unit => u !== undefined);
 
         setUnits(parsed);
         setError(null);
@@ -65,7 +95,7 @@ export default function Page() {
   if (!mounted) return <div className="p-6">Loading app...</div>;
   if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
-  // Counters
+  // Counters (use lowercase status keys)
   const counters = {
     Available: units.filter((u) => u.status === "available").length,
     "On Hold": units.filter((u) => u.status === "on hold").length,
@@ -73,13 +103,7 @@ export default function Page() {
     Sold: units.filter((u) => u.status === "sold").length,
   };
 
-  const colors: Record<Status, string> = {
-    available: "bg-green-500 text-white",
-    "on hold": "bg-amber-400 text-black",
-    booked: "bg-blue-500 text-white",
-    sold: "bg-red-600 text-white",
-  };
-
+  // Group by floor
   const grouped: Record<number, Unit[]> = units.reduce((acc, u) => {
     (acc[u.floor] ||= []).push(u);
     return acc;
@@ -87,13 +111,17 @@ export default function Page() {
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
+      {/* Header */}
       <h1 className="text-3xl font-bold mb-6">🏢 Lumena by Omniyat</h1>
 
       {/* Counters */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {Object.entries(counters).map(([label, value]) => (
-          <div key={label} className="bg-white shadow rounded-xl p-4 text-center">
-            <div className="text-3xl font-bold">{value}</div>
+        {(Object.keys(counters) as (keyof typeof counters)[]).map((label) => (
+          <div
+            key={label}
+            className="bg-white shadow rounded-xl p-4 text-center"
+          >
+            <div className="text-3xl font-bold">{counters[label]}</div>
             <div className="text-gray-600">{label}</div>
           </div>
         ))}
@@ -101,10 +129,10 @@ export default function Page() {
 
       {/* Legend */}
       <div className="flex gap-4 mb-6 text-sm">
-        {Object.entries(colors).map(([label, cls]) => (
-          <div key={label} className="flex items-center gap-1">
-            <span className={`w-3 h-3 rounded-full ${cls}`} />
-            {label}
+        {(Object.keys(labels) as Status[]).map((key) => (
+          <div key={key} className="flex items-center gap-1">
+            <span className={`w-3 h-3 rounded-full ${colors[key]}`} />
+            {labels[key]}
           </div>
         ))}
       </div>
