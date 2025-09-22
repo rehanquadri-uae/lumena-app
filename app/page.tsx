@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 const CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTWv3b8HTs_2dVSAul-NwDABv3cIlDgYJBFKcdoWNpXS7N9WX42Fs3QEsWcyimgF-8K5NoD2SUyR41V/pub?output=csv";
 
-// Status types (all lowercase for consistency)
 type Status = "available" | "on hold" | "booked" | "sold";
 
 type Unit = {
@@ -16,25 +15,9 @@ type Unit = {
   status: Status;
 };
 
-// Mapping lowercase → pretty label
-const labels: Record<Status, string> = {
-  available: "Available",
-  "on hold": "On Hold",
-  booked: "Booked",
-  sold: "Sold",
-};
-
-// Colors for each status
-const colors: Record<Status, string> = {
-  available: "bg-green-500 text-white",
-  "on hold": "bg-amber-400 text-black",
-  booked: "bg-blue-500 text-white",
-  sold: "bg-red-600 text-white",
-};
-
 export default function Page() {
   const [units, setUnits] = useState<Unit[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -51,41 +34,22 @@ export default function Page() {
         const parsed: Unit[] = rows
           .map((row) => {
             const cols = row.split(",");
-            if (cols.length < 6) return undefined;
+            if (cols.length < 6) return null;
             const [unit, floor, type, area, parking, status] = cols;
-
-            const normalized = (status || "")
-              .trim()
-              .replace(/\r/g, "")
-              .toLowerCase() as Status;
-
-            // Validate against known statuses
-            const validStatuses: Status[] = [
-              "available",
-              "on hold",
-              "booked",
-              "sold",
-            ];
-            const finalStatus: Status = validStatuses.includes(normalized)
-              ? normalized
-              : "available";
-
             return {
-              unit: (unit || "").trim(),
-              floor: parseInt((floor || "0").trim(), 10),
-              type: (type || "").trim(),
-              area: (area || "").trim(),
-              parking: (parking || "").trim(),
-              status: finalStatus,
+              unit: unit.trim(),
+              floor: parseInt(floor.trim(), 10),
+              type: type.trim(),
+              area: area.trim(),
+              parking: parking.trim(),
+              status: (status.trim().toLowerCase() || "available") as Status,
             };
           })
-          .filter((u): u is Unit => u !== undefined);
+          .filter(Boolean) as Unit[];
 
         setUnits(parsed);
-        setError(null);
-      } catch (err: any) {
+      } catch (err) {
         console.error("CSV fetch error:", err);
-        setError(err.message);
       }
     }
 
@@ -93,9 +57,8 @@ export default function Page() {
   }, []);
 
   if (!mounted) return <div className="p-6">Loading app...</div>;
-  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
-  // Counters (use lowercase status keys)
+  // Counters
   const counters = {
     Available: units.filter((u) => u.status === "available").length,
     "On Hold": units.filter((u) => u.status === "on hold").length,
@@ -103,76 +66,126 @@ export default function Page() {
     Sold: units.filter((u) => u.status === "sold").length,
   };
 
-  // Group by floor
+  const colors: Record<Status, string> = {
+    available: "border-green-600 text-green-600",
+    "on hold": "border-amber-500 text-amber-500",
+    booked: "border-blue-600 text-blue-600",
+    sold: "border-red-600 text-red-600",
+  };
+
+  const counterColors: Record<string, string> = {
+    Available: "text-green-600 border-green-600",
+    "On Hold": "text-amber-500 border-amber-500",
+    Booked: "text-blue-600 border-blue-600",
+    Sold: "text-red-600 border-red-600",
+  };
+
   const grouped: Record<number, Unit[]> = units.reduce((acc, u) => {
     (acc[u.floor] ||= []).push(u);
     return acc;
   }, {} as Record<number, Unit[]>);
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
-      <h1 className="text-3xl font-bold mb-6">🏢 Lumena by Omniyat</h1>
+    <main className="min-h-screen bg-gray-50 font-[Optima]">
+      {/* Header with logo */}
+      <header className="flex items-center justify-center gap-3 py-6">
+        <img src="/logo.png" alt="Logo" className="h-12 w-auto" />
+        <h1 className="text-3xl font-bold">Lumena by Omniyat</h1>
+      </header>
 
       {/* Counters */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {(Object.keys(counters) as (keyof typeof counters)[]).map((label) => (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10 max-w-3xl mx-auto px-4">
+        {Object.entries(counters).map(([label, value]) => (
           <div
             key={label}
-            className="bg-white shadow rounded-xl p-4 text-center"
+            className={`bg-white shadow-lg rounded-xl p-6 text-center border-2 ${
+              counterColors[label]?.split(" ")[1] || "border-gray-300"
+            }`}
           >
-            <div className="text-3xl font-bold">{counters[label]}</div>
+            <div
+              className={`text-3xl font-bold ${
+                counterColors[label]?.split(" ")[0] || "text-gray-900"
+              }`}
+            >
+              {value}
+            </div>
             <div className="text-gray-600">{label}</div>
           </div>
         ))}
       </div>
 
-      {/* Legend */}
-      <div className="flex gap-4 mb-6 text-sm">
-        {(Object.keys(labels) as Status[]).map((key) => (
-          <div key={key} className="flex items-center gap-1">
-            <span className={`w-3 h-3 rounded-full ${colors[key]}`} />
-            {labels[key]}
-          </div>
-        ))}
+      {/* Floors */}
+      <div className="max-w-3xl mx-auto px-4 space-y-10">
+        {Object.keys(grouped)
+          .map(Number)
+          .sort((a, b) => b - a)
+          .map((floor) => (
+            <section key={floor}>
+              <h2 className="bg-[#0A073E] text-white px-4 py-2 rounded-md text-lg font-semibold mb-4 text-center shadow">
+                Floor {floor}
+              </h2>
+              <div
+                className="grid gap-4"
+                style={{
+                  gridTemplateColumns: `repeat(${grouped[floor].length}, minmax(0, 1fr))`,
+                }}
+              >
+                {grouped[floor].map((u) => (
+                  <div
+                    key={u.unit}
+                    onClick={() =>
+                      u.status === "available" && setSelectedUnit(u)
+                    }
+                    className={`p-6 rounded-lg shadow-md text-center cursor-pointer bg-[#F5F5DC] border-2 ${
+                      colors[u.status]
+                    }`}
+                  >
+                    <div className="font-bold">{u.unit}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
       </div>
 
-      {/* Floors */}
-      {Object.keys(grouped).length === 0 ? (
-        <p className="text-gray-600">No units found in CSV.</p>
-      ) : (
-        <div className="space-y-8">
-          {Object.keys(grouped)
-            .map(Number)
-            .sort((a, b) => b - a)
-            .map((floor) => (
-              <section key={floor}>
-                <h2 className="text-xl font-semibold mb-2">Floor {floor}</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {grouped[floor].map((u) => {
-                    const isLocked =
-                      u.status === "sold" || u.status === "booked";
-                    return (
-                      <div
-                        key={u.unit}
-                        className={`p-4 rounded-lg shadow text-center ${colors[u.status]} ${
-                          isLocked
-                            ? "opacity-70 cursor-not-allowed"
-                            : "cursor-pointer"
-                        }`}
-                      >
-                        <div className="font-bold">Unit {u.unit}</div>
-                        {!isLocked && (
-                          <div className="text-sm mt-1">
-                            {u.type}, {u.area} sqft, Parking {u.parking}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
+      {/* Modal */}
+      {selectedUnit && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setSelectedUnit(null)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 max-w-md w-full relative shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedUnit(null)}
+              className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
+            >
+              ✕
+            </button>
+            <h3 className="text-xl font-bold mb-4">
+              Unit {selectedUnit.unit} Details
+            </h3>
+            <p>
+              <strong>Floor:</strong> {selectedUnit.floor}
+            </p>
+            <p>
+              <strong>Type:</strong> {selectedUnit.type}
+            </p>
+            <p>
+              <strong>Area:</strong> {selectedUnit.area} sqft
+            </p>
+            <p>
+              <strong>Parking:</strong> {selectedUnit.parking}
+            </p>
+            <p>
+              <strong>Status:</strong>{" "}
+              <span className={colors[selectedUnit.status]}>
+                {selectedUnit.status.toUpperCase()}
+              </span>
+            </p>
+          </div>
         </div>
       )}
     </main>
