@@ -1,148 +1,137 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
-type Unit = {
-  id: number;
-  name: string;
-  status: "Available" | "On Hold" | "Booked" | "Sold";
-  floor: number;
-};
+interface Counter {
+  label: string;
+  value: number;
+  color: string;
+}
 
-type Floor = {
-  number: number;
-  units: Unit[];
-};
+export default function Page() {
+  const [counters, setCounters] = useState<Counter[]>([
+    { label: "Total", value: 0, color: "text-gray-900" },
+    { label: "Available", value: 0, color: "text-green-600" },
+    { label: "On Hold", value: 0, color: "text-amber-600" },
+    { label: "Booked", value: 0, color: "text-blue-600" },
+    { label: "Sold", value: 0, color: "text-red-600" },
+  ]);
 
-export default function Home() {
-  const [floors, setFloors] = useState<Floor[]>([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    available: 0,
-    onHold: 0,
-    booked: 0,
-    sold: 0,
-  });
-
-  // Mock fetch — replace with Supabase later
   useEffect(() => {
-    const data: Unit[] = [
-      { id: 1, name: "Unit 301", status: "Sold", floor: 3 },
-      { id: 2, name: "Unit 302", status: "Sold", floor: 3 },
-      { id: 3, name: "Unit 401", status: "Sold", floor: 4 },
-      { id: 4, name: "Unit 402", status: "Sold", floor: 4 },
-      { id: 5, name: "Unit 403", status: "Available", floor: 4 },
-      { id: 6, name: "Unit 501", status: "Available", floor: 5 },
-      { id: 7, name: "Unit 502", status: "On Hold", floor: 5 },
-      { id: 8, name: "Unit 503", status: "Booked", floor: 5 },
-    ];
+    async function fetchData() {
+      try {
+        const sheetId = "1iU0hB0vjj9B7qbf5Niu_YqsdfBrn0CaFd4HLjkS-_tI";
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
-    // Group by floor
-    const grouped: Floor[] = [];
-    data.forEach((unit) => {
-      let floor = grouped.find((f) => f.number === unit.floor);
-      if (!floor) {
-        floor = { number: unit.floor, units: [] };
-        grouped.push(floor);
+        const res = await fetch(url);
+        const text = await res.text();
+
+        // Parse JSON-like response
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const rows = json.table.rows;
+
+        // Count statuses
+        let available = 0,
+          onHold = 0,
+          booked = 0,
+          sold = 0;
+
+        rows.forEach((row: any) => {
+          const status = row.c[1]?.v; // assuming column 2 = Status
+          if (status === "Available") available++;
+          if (status === "On Hold") onHold++;
+          if (status === "Booked") booked++;
+          if (status === "Sold") sold++;
+        });
+
+        const total = available + onHold + booked + sold;
+
+        setCounters([
+          { label: "Total", value: total, color: "text-gray-900" },
+          { label: "Available", value: available, color: "text-green-600" },
+          { label: "On Hold", value: onHold, color: "text-amber-600" },
+          { label: "Booked", value: booked, color: "text-blue-600" },
+          { label: "Sold", value: sold, color: "text-red-600" },
+        ]);
+      } catch (err) {
+        console.error("Error fetching sheet data:", err);
       }
-      floor.units.push(unit);
-    });
+    }
 
-    setFloors(grouped.sort((a, b) => a.number - b.number));
+    fetchData();
 
-    // Stats
-    setStats({
-      total: data.length,
-      available: data.filter((u) => u.status === "Available").length,
-      onHold: data.filter((u) => u.status === "On Hold").length,
-      booked: data.filter((u) => u.status === "Booked").length,
-      sold: data.filter((u) => u.status === "Sold").length,
-    });
+    // Auto-refresh every 30s
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4">
-      {/* Logo */}
-      <div className="mb-6">
-        <img
-          src="/logo.png"
-          alt="Lumena Logo"
-          className="w-24 h-24 object-contain mx-auto"
-        />
-      </div>
+    <main className="min-h-screen bg-white flex flex-col items-center justify-start p-6">
+      {/* Header above counters */}
+      <div className="w-full max-w-6xl mb-8">
+        <div className="flex items-center gap-4 justify-start">
+          {/* Omniyat Logo (left) */}
+          <Image
+            src="/logo.png"
+            alt="Omniyat Logo"
+            width={120}
+            height={40}
+            className="object-contain"
+          />
 
-      {/* Counters Row */}
-      <div className="grid grid-cols-5 gap-2 sm:gap-4 w-full max-w-2xl mx-auto text-center bg-white shadow-md rounded-2xl py-4 px-2 mb-10">
-        <div>
-          <div className="text-sm font-medium">Total</div>
-          <div className="text-lg font-bold">{stats.total}</div>
-        </div>
-        <div>
-          <div className="text-sm font-medium text-green-600">Available</div>
-          <div className="text-lg font-bold text-green-600">
-            {stats.available}
+          {/* Lumena + By Omniyat (beside logo) */}
+          <div className="flex flex-col">
+            <h1
+              className="font-medium text-black"
+              style={{
+                fontFamily: "Optima, Optima Pro, sans-serif",
+                fontSize: "1.75rem",
+                fontWeight: 600,
+              }}
+            >
+              Lumena
+            </h1>
+            <p
+              className="text-black"
+              style={{
+                fontFamily: "Optima, Optima Pro, sans-serif",
+                fontSize: "1.2rem",
+              }}
+            >
+              By Omniyat
+            </p>
           </div>
         </div>
-        <div>
-          <div className="text-sm font-medium text-amber-600">On Hold</div>
-          <div className="text-lg font-bold text-amber-600">{stats.onHold}</div>
-        </div>
-        <div>
-          <div className="text-sm font-medium text-blue-600">Booked</div>
-          <div className="text-lg font-bold text-blue-600">{stats.booked}</div>
-        </div>
-        <div>
-          <div className="text-sm font-medium text-red-600">Sold</div>
-          <div className="text-lg font-bold text-red-600">{stats.sold}</div>
-        </div>
       </div>
 
-      {/* Floors & Units */}
-      <div className="w-full max-w-6xl">
-        {floors.map((floor) => (
-          <div key={floor.number} className="mb-10">
-            {/* Floor Heading */}
-            <h2 className="text-lg font-semibold mb-4 text-center">
-              Floor {floor.number}
-            </h2>
-
-            {/* Units Row */}
-            <div className="flex flex-nowrap gap-4 overflow-x-auto scrollbar-hide px-2">
-              {floor.units.map((unit) => (
-                <div
-                  key={unit.id}
-                  className={`border-2 rounded-xl px-6 py-6 text-center relative shadow-sm min-w-[140px] ${
-                    unit.status === "Available"
-                      ? "border-green-500"
-                      : unit.status === "On Hold"
-                      ? "border-amber-500"
-                      : unit.status === "Booked"
-                      ? "border-blue-500"
-                      : "border-red-500"
-                  }`}
-                >
-                  {/* Status Badge */}
-                  <span
-                    className={`absolute top-1 right-1 text-xs px-2 py-1 rounded-full text-white ${
-                      unit.status === "Available"
-                        ? "bg-green-500"
-                        : unit.status === "On Hold"
-                        ? "bg-amber-500"
-                        : unit.status === "Booked"
-                        ? "bg-blue-500"
-                        : "bg-red-500"
-                    }`}
-                  >
-                    {unit.status}
-                  </span>
-
-                  {/* Unit Number */}
-                  <div className="font-semibold">{unit.name}</div>
-                </div>
-              ))}
-            </div>
+      {/* Counters */}
+      <div className="flex flex-wrap justify-center gap-6 mb-10">
+        {counters.map((counter) => (
+          <div
+            key={counter.label}
+            className="bg-gray-50 rounded-2xl shadow-md p-6 w-40 text-center"
+          >
+            <p className={`text-3xl font-bold ${counter.color}`}>
+              {counter.value}
+            </p>
+            <p className="text-gray-600 mt-1">{counter.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Units Row (static example for now) */}
+      <div className="w-full max-w-6xl overflow-x-auto">
+        <div className="flex gap-4 min-w-max">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white border rounded-xl shadow-sm p-4 flex items-center justify-center w-40"
+            >
+              Unit {i + 1}
+            </div>
+          ))}
+        </div>
       </div>
     </main>
   );
