@@ -29,10 +29,10 @@ export default function Page() {
 
   return (
     <main className="min-h-screen bg-white flex flex-col items-center justify-start p-6">
-      {/* Header with Logo + Lumena Text */}
-      <div className="flex flex-col items-center mb-8">
-        {/* Omniyat Logo */}
-        <div className="mb-2">
+      {/* Header above counters */}
+      <div className="w-full max-w-6xl mb-8">
+        <div className="flex items-start gap-4">
+          {/* Omniyat Logo (left) */}
           <Image
             src="/omniyat-logo.png"
             alt="Omniyat Logo"
@@ -40,31 +40,28 @@ export default function Page() {
             height={40}
             className="object-contain"
           />
-        </div>
 
-        {/* Lumena + By Omniyat */}
-        <div className="text-center">
-          <h1
-            className="font-medium"
-            style={{
-              fontFamily: "Optima, Optima Pro, sans-serif",
-              fontSize: "1.75rem",
-              letterSpacing: "0.02em",
-              fontWeight: 600,
-            }}
-          >
-            Lumena
-          </h1>
-          <p
-            className="mt-1"
-            style={{
-              fontFamily: "Optima, Optima Pro, sans-serif",
-              fontSize: "1.2rem",
-              letterSpacing: "0.02em",
-            }}
-          >
-            By Omniyat
-          </p>
+          {/* Lumena + By Omniyat (raised upward slightly) */}
+          <div className="flex flex-col -mt-1">
+            <h1
+              className="font-medium"
+              style={{
+                fontFamily: "Optima, Optima Pro, sans-serif",
+                fontSize: "1.75rem",
+                fontWeight: 600,
+              }}
+            >
+              Lumena
+            </h1>
+            <p
+              style={{
+                fontFamily: "Optima, Optima Pro, sans-serif",
+                fontSize: "1.2rem",
+              }}
+            >
+              By Omniyat
+            </p>
+          </div>
         </div>
       </div>
 
