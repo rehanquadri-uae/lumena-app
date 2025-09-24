@@ -62,6 +62,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4">
+      
       {/* Branding Row */}
       <div className="w-full max-w-2xl flex items-center justify-center mb-8">
         {/* Logo on Left */}
