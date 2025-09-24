@@ -1,223 +1,149 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 
 type Unit = {
-  unit: string;
-  floor: string;
-  type: string;
-  area: string;
-  parking: string;
-  status: "Available" | "On Hold" | "Booked" | "Sold" | string;
+  id: number;
+  name: string;
+  status: "Available" | "On Hold" | "Booked" | "Sold";
+  floor: number;
 };
 
-const SHEET_ID = process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID!;
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY!;
-const RANGE = "'First Release(in)'!A1:F1000";
-const POLL_MS = 30_000;
+type Floor = {
+  number: number;
+  units: Unit[];
+};
 
-/* ---------- Helpers ---------- */
-function normalizeStatus(raw: string | undefined): Unit["status"] {
-  const s = (raw ?? "").toLowerCase().trim();
-  if (["available", "avail"].includes(s)) return "Available";
-  if (["hold", "on hold", "on-hold"].includes(s)) return "On Hold";
-  if (["booked", "reserve", "reserved"].includes(s)) return "Booked";
-  if (["sold", "closed"].includes(s)) return "Sold";
-  return (raw ?? "").toString();
-}
-
-function rowsToUnits(rows: string[][]): Unit[] {
-  if (!rows || rows.length === 0) return [];
-  const [header, ...values] = rows;
-  const keys = header.map((h) => h.trim().toLowerCase());
-
-  return values.map((row) => {
-    const obj: Record<string, string> = {};
-    keys.forEach((k, i) => (obj[k] = (row[i] ?? "").toString().trim()));
-    obj["status"] = normalizeStatus(obj["status"]);
-    return obj as Unit;
+export default function Home() {
+  const [floors, setFloors] = useState<Floor[]>([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    available: 0,
+    onHold: 0,
+    booked: 0,
+    sold: 0,
   });
-}
 
-function statusColors(status: string) {
-  switch (status) {
-    case "Available":
-      return { border: "border-green-500", badge: "bg-green-500 text-white" };
-    case "On Hold":
-      return { border: "border-amber-500", badge: "bg-amber-500 text-white" };
-    case "Booked":
-      return { border: "border-blue-500", badge: "bg-blue-500 text-white" };
-    case "Sold":
-      return { border: "border-red-500", badge: "bg-red-500 text-white" };
-    default:
-      return { border: "border-gray-300", badge: "bg-gray-400 text-white" };
-  }
-}
-
-/* ---------- Fetch ---------- */
-async function fetchUnits(): Promise<Unit[]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(
-    RANGE
-  )}?key=${API_KEY}`;
-  const res = await fetch(url, { cache: "no-store" });
-  const data: { values?: string[][] } = await res.json();
-  return rowsToUnits(data.values ?? []);
-}
-
-/* ---------- Page ---------- */
-export default function Page() {
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<Unit | null>(null);
-
-  async function load() {
-    try {
-      setLoading(true);
-      const data = await fetchUnits();
-      setUnits(data);
-    } finally {
-      setLoading(false);
-    }
-  }
-
+  // Mock fetch — replace with Supabase later
   useEffect(() => {
-    load();
-    const id = setInterval(load, POLL_MS);
-    return () => clearInterval(id);
+    const data: Unit[] = [
+      { id: 1, name: "Unit 301", status: "Sold", floor: 3 },
+      { id: 2, name: "Unit 302", status: "Sold", floor: 3 },
+      { id: 3, name: "Unit 401", status: "Sold", floor: 4 },
+      { id: 4, name: "Unit 402", status: "Sold", floor: 4 },
+      { id: 5, name: "Unit 403", status: "Available", floor: 4 },
+      { id: 6, name: "Unit 501", status: "Available", floor: 5 },
+      { id: 7, name: "Unit 502", status: "On Hold", floor: 5 },
+      { id: 8, name: "Unit 503", status: "Booked", floor: 5 },
+    ];
+
+    // Group by floor
+    const grouped: Floor[] = [];
+    data.forEach((unit) => {
+      let floor = grouped.find((f) => f.number === unit.floor);
+      if (!floor) {
+        floor = { number: unit.floor, units: [] };
+        grouped.push(floor);
+      }
+      floor.units.push(unit);
+    });
+
+    setFloors(grouped.sort((a, b) => a.number - b.number));
+
+    // Stats
+    setStats({
+      total: data.length,
+      available: data.filter((u) => u.status === "Available").length,
+      onHold: data.filter((u) => u.status === "On Hold").length,
+      booked: data.filter((u) => u.status === "Booked").length,
+      sold: data.filter((u) => u.status === "Sold").length,
+    });
   }, []);
 
-  const counts = useMemo(() => {
-    const c = { total: units.length, available: 0, hold: 0, booked: 0, sold: 0 };
-    for (const u of units) {
-      if (u.status === "Available") c.available++;
-      else if (u.status === "On Hold") c.hold++;
-      else if (u.status === "Booked") c.booked++;
-      else if (u.status === "Sold") c.sold++;
-    }
-    return c;
-  }, [units]);
-
-  // group by floor
-  const grouped = useMemo(() => {
-    const map: Record<string, Unit[]> = {};
-    units.forEach((u) => {
-      if (!map[u.floor]) map[u.floor] = [];
-      map[u.floor].push(u);
-    });
-    return Object.entries(map).sort((a, b) => Number(a[0]) - Number(b[0]));
-  }, [units]);
-
   return (
-    <main className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-5xl mx-auto space-y-10">
-        {/* Header with Logo */}
-        <header className="flex justify-center">
-          <Image src="/logo.png" alt="Lumena Logo" width={160} height={60} priority />
-        </header>
-
-        {/* Counters */}
-        <section className="flex justify-center">
-          <div className="flex divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-6 py-4 sm:px-12 sm:py-6">
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500">Total</p>
-              <p className="text-2xl sm:text-3xl font-semibold">{counts.total}</p>
-            </div>
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500">Available</p>
-              <p className="text-2xl sm:text-3xl font-semibold text-green-600">{counts.available}</p>
-            </div>
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500">On Hold</p>
-              <p className="text-2xl sm:text-3xl font-semibold text-amber-600">{counts.hold}</p>
-            </div>
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500">Booked</p>
-              <p className="text-2xl sm:text-3xl font-semibold text-blue-600">{counts.booked}</p>
-            </div>
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500">Sold</p>
-              <p className="text-2xl sm:text-3xl font-semibold text-red-600">{counts.sold}</p>
-            </div>
-          </div>
-        </section>
-
-        {loading && <p className="text-center text-gray-500">Loading…</p>}
-
-        {/* Floors */}
-        <section className="space-y-10">
-          {grouped.map(([floor, floorUnits]) => (
-            <div key={floor} className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-700 text-center">
-                Floor {floor}
-              </h2>
-              <div className="flex gap-6 overflow-x-auto justify-center sm:justify-center no-scrollbar">
-                {floorUnits.map((u) => {
-                  const colors = statusColors(u.status);
-                  const clickable =
-                    u.status === "Available" || u.status === "On Hold";
-                  return (
-                    <div
-                      key={u.unit}
-                      onClick={() => (clickable ? setSelected(u) : null)}
-                      className={`relative flex-shrink-0 w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
-                        clickable ? "cursor-pointer hover:shadow-lg" : ""
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full ${colors.badge}`}
-                      >
-                        {u.status}
-                      </span>
-                      <span className="text-lg font-semibold">Unit {u.unit}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </section>
+    <main className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4">
+      {/* Logo */}
+      <div className="mb-6">
+        <img
+          src="/logo.png"
+          alt="Lumena Logo"
+          className="w-24 h-24 object-contain mx-auto"
+        />
       </div>
 
-      {/* Modal */}
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-[90vw] max-w-md p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-semibold">Unit {selected.unit}</h3>
-              <button onClick={() => setSelected(null)}>✕</button>
-            </div>
-            <div className="mt-4 space-y-2 text-sm">
-              <p>
-                <span className="text-gray-500">Type:</span> {selected.type}
-              </p>
-              <p>
-                <span className="text-gray-500">Area:</span> {selected.area} sqft
-              </p>
-              <p>
-                <span className="text-gray-500">Parking:</span> {selected.parking}
-              </p>
-              <p>
-                <span className="text-gray-500">Status:</span> {selected.status}
-              </p>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200"
-                onClick={() => setSelected(null)}
-              >
-                Close
-              </button>
-            </div>
+      {/* Counters Row */}
+      <div className="grid grid-cols-5 gap-2 sm:gap-4 w-full max-w-2xl mx-auto text-center bg-white shadow-md rounded-2xl py-4 px-2 mb-10">
+        <div>
+          <div className="text-sm font-medium">Total</div>
+          <div className="text-lg font-bold">{stats.total}</div>
+        </div>
+        <div>
+          <div className="text-sm font-medium text-green-600">Available</div>
+          <div className="text-lg font-bold text-green-600">
+            {stats.available}
           </div>
         </div>
-      )}
+        <div>
+          <div className="text-sm font-medium text-amber-600">On Hold</div>
+          <div className="text-lg font-bold text-amber-600">{stats.onHold}</div>
+        </div>
+        <div>
+          <div className="text-sm font-medium text-blue-600">Booked</div>
+          <div className="text-lg font-bold text-blue-600">{stats.booked}</div>
+        </div>
+        <div>
+          <div className="text-sm font-medium text-red-600">Sold</div>
+          <div className="text-lg font-bold text-red-600">{stats.sold}</div>
+        </div>
+      </div>
+
+      {/* Floors & Units */}
+      <div className="w-full max-w-6xl">
+        {floors.map((floor) => (
+          <div key={floor.number} className="mb-10">
+            {/* Floor Heading */}
+            <h2 className="text-lg font-semibold mb-4 text-center">
+              Floor {floor.number}
+            </h2>
+
+            {/* Units Row */}
+            <div className="flex flex-nowrap gap-4 overflow-x-auto scrollbar-hide px-2">
+              {floor.units.map((unit) => (
+                <div
+                  key={unit.id}
+                  className={`border-2 rounded-xl px-6 py-6 text-center relative shadow-sm min-w-[140px] ${
+                    unit.status === "Available"
+                      ? "border-green-500"
+                      : unit.status === "On Hold"
+                      ? "border-amber-500"
+                      : unit.status === "Booked"
+                      ? "border-blue-500"
+                      : "border-red-500"
+                  }`}
+                >
+                  {/* Status Badge */}
+                  <span
+                    className={`absolute top-1 right-1 text-xs px-2 py-1 rounded-full text-white ${
+                      unit.status === "Available"
+                        ? "bg-green-500"
+                        : unit.status === "On Hold"
+                        ? "bg-amber-500"
+                        : unit.status === "Booked"
+                        ? "bg-blue-500"
+                        : "bg-red-500"
+                    }`}
+                  >
+                    {unit.status}
+                  </span>
+
+                  {/* Unit Number */}
+                  <div className="font-semibold">{unit.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </main>
   );
 }
