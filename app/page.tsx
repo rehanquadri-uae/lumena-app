@@ -21,24 +21,23 @@ export default function Page() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const sheetId = "1iU0hB0vjj9B7qbf5Niu_YqsdfBrn0CaFd4HLjkS-_tI";
+        const sheetId = "1iU0hB0vjj9B7qbf5Niu_YqsdfBrn0CaFd4HLjkS-_tI"; // <-- replace with your Google Sheet ID
         const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
         const res = await fetch(url);
         const text = await res.text();
 
-        // Parse JSON-like response
+        // Parse JSON-like response from Google Sheets
         const json = JSON.parse(text.substring(47).slice(0, -2));
         const rows = json.table.rows;
 
-        // Count statuses
         let available = 0,
           onHold = 0,
           booked = 0,
           sold = 0;
 
         rows.forEach((row: any) => {
-          const status = row.c[1]?.v; // assuming column 2 = Status
+          const status = row.c[1]?.v; // Column 2 = Status
           if (status === "Available") available++;
           if (status === "On Hold") onHold++;
           if (status === "Booked") booked++;
@@ -60,9 +59,7 @@ export default function Page() {
     }
 
     fetchData();
-
-    // Auto-refresh every 30s
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchData, 30000); // Auto-refresh every 30s
     return () => clearInterval(interval);
   }, []);
 
@@ -105,12 +102,12 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Counters */}
-      <div className="flex flex-wrap justify-center gap-6 mb-10">
+      {/* Counters (5-column grid, always aligned) */}
+      <div className="grid grid-cols-5 gap-4 w-full max-w-4xl mb-10">
         {counters.map((counter) => (
           <div
             key={counter.label}
-            className="bg-gray-50 rounded-2xl shadow-md p-6 w-40 text-center"
+            className="bg-gray-50 rounded-2xl shadow-md p-6 text-center"
           >
             <p className={`text-3xl font-bold ${counter.color}`}>
               {counter.value}
