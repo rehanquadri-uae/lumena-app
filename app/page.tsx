@@ -129,12 +129,13 @@ export default function Page() {
       >
         Lumena
       </h1>
-      <p
-        className="text-lg sm:text-xl"
-        style={{ fontFamily: "OptimaProMedium", color: "#0A073E" }}
-      >
-        by Omniyat
-      </p>
+    <p
+  className="text-xl sm:text-2xl"
+  style={{ fontFamily: "OptimaProMedium", color: "#0A073E" }}
+>
+  by Omniyat
+</p>
+
     </div>
   </div>
 </header>
