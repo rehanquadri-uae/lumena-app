@@ -107,7 +107,7 @@ export default function Home() {
             </h2>
 
             {/* Units Row */}
-            <div className="flex gap-4 justify-start overflow-x-auto scrollbar-hide px-2">
+            <div className="flex flex-nowrap gap-4 overflow-x-auto scrollbar-hide px-2">
               {floor.units.map((unit) => (
                 <div
                   key={unit.id}
