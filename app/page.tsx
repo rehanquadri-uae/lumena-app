@@ -60,8 +60,14 @@ async function fetchUnits(): Promise<Unit[]> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(
     RANGE
   )}?key=${API_KEY}`;
+
+  console.log("👉 Fetching Google Sheets URL:", url); // debug log
+
   const res = await fetch(url, { cache: "no-store" });
   const data: { values?: string[][] } = await res.json();
+
+  console.log("👉 Google Sheets Response:", data); // debug log
+
   return rowsToUnits(data.values ?? []);
 }
 
