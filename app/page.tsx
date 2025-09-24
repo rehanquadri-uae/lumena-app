@@ -60,10 +60,8 @@ async function fetchUnits(): Promise<Unit[]> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(
     RANGE
   )}?key=${API_KEY}`;
-
   const res = await fetch(url, { cache: "no-store" });
   const data: { values?: string[][] } = await res.json();
-
   return rowsToUnits(data.values ?? []);
 }
 
@@ -111,35 +109,33 @@ export default function Page() {
   }, [units]);
 
   return (
-    <main className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <main className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+      <div className="max-w-5xl mx-auto space-y-10">
         {/* Header with Logo */}
-        <header className="flex justify-center mb-4">
+        <header className="flex justify-center">
           <Image src="/logo.png" alt="Lumena Logo" width={160} height={60} priority />
         </header>
 
         {/* Counters */}
-        <section className="flex justify-center mb-4">
-          <div className="flex divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-12 py-6">
-            <div className="px-6 text-center">
+        <section className="flex justify-center">
+          <div className="flex flex-wrap justify-center divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-4 sm:px-8 py-4 max-w-full">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500">Total</p>
               <p className="text-3xl font-semibold">{counts.total}</p>
             </div>
-            <div className="px-6 text-center">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500">Available</p>
-              <p className="text-3xl font-semibold text-green-600">
-                {counts.available}
-              </p>
+              <p className="text-3xl font-semibold text-green-600">{counts.available}</p>
             </div>
-            <div className="px-6 text-center">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500 whitespace-nowrap">On Hold</p>
               <p className="text-3xl font-semibold text-amber-600">{counts.hold}</p>
             </div>
-            <div className="px-6 text-center">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500">Booked</p>
               <p className="text-3xl font-semibold text-blue-600">{counts.booked}</p>
             </div>
-            <div className="px-6 text-center">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500">Sold</p>
               <p className="text-3xl font-semibold text-red-600">{counts.sold}</p>
             </div>
@@ -149,13 +145,13 @@ export default function Page() {
         {loading && <p className="text-center text-gray-500">Loading…</p>}
 
         {/* Floors */}
-        <section className="space-y-8">
+        <section className="space-y-10">
           {grouped.map(([floor, floorUnits]) => (
             <div key={floor} className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-700 text-center">
                 Floor {floor}
               </h2>
-              <div className="flex flex-wrap justify-center gap-6 pb-2">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center">
                 {floorUnits.map((u) => {
                   const colors = statusColors(u.status);
                   const clickable =
@@ -164,7 +160,7 @@ export default function Page() {
                     <div
                       key={u.unit}
                       onClick={() => (clickable ? setSelected(u) : null)}
-                      className={`relative flex-shrink-0 w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
+                      className={`relative w-28 sm:w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
                         clickable ? "cursor-pointer hover:shadow-lg" : ""
                       }`}
                     >
@@ -173,7 +169,9 @@ export default function Page() {
                       >
                         {u.status}
                       </span>
-                      <span className="text-lg font-semibold">Unit {u.unit}</span>
+                      <span className="text-sm sm:text-lg font-semibold">
+                        Unit {u.unit}
+                      </span>
                     </div>
                   );
                 })}
