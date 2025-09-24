@@ -31,17 +31,17 @@ export default function Page() {
     <main className="min-h-screen bg-white flex flex-col items-center justify-start p-6">
       {/* Header above counters */}
       <div className="w-full max-w-6xl mb-8">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 justify-start">
           {/* Omniyat Logo (left) */}
           <Image
-            src="/logo.png"   // ✅ fixed filename
+            src="/logo.png"
             alt="Omniyat Logo"
             width={120}
             height={40}
             className="object-contain"
           />
 
-          {/* Lumena + By Omniyat (raised upward slightly) */}
+          {/* Lumena + By Omniyat (right of logo, slightly raised) */}
           <div className="flex flex-col -mt-1">
             <h1
               className="font-medium"
