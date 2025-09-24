@@ -14,7 +14,7 @@ type Unit = {
 
 const SHEET_ID = process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID!;
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY!;
-const RANGE = "'First Release(in)'!A1:F1000";
+const SHEET_NAME = "First Release(in)"; // 👈 exact sheet tab name
 const POLL_MS = 30_000;
 
 /* ---------- Helpers ---------- */
@@ -55,14 +55,24 @@ function statusColors(status: string) {
   }
 }
 
-/* ---------- Fetch ---------- */
+/* ---------- Fetch with Debug ---------- */
 async function fetchUnits(): Promise<Unit[]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(
-    RANGE
-  )}?key=${API_KEY}`;
-  const res = await fetch(url, { cache: "no-store" });
-  const data: { values?: string[][] } = await res.json();
-  return rowsToUnits(data.values ?? []);
+  const range = `'${SHEET_NAME}'!A1:F1000`; // raw, with quotes
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
+
+  try {
+    console.log("Fetching Google Sheets URL:", url);
+
+    const res = await fetch(url, { cache: "no-store" });
+    const text = await res.text(); // log raw JSON string
+    console.log("Sheets API Raw Response:", text);
+
+    const data = JSON.parse(text);
+    return rowsToUnits(data.values ?? []);
+  } catch (err) {
+    console.error("Sheets API fetch failed:", err);
+    return [];
+  }
 }
 
 /* ---------- Page ---------- */
@@ -82,6 +92,9 @@ export default function Page() {
   }
 
   useEffect(() => {
+    console.log("Sheet ID from env:", SHEET_ID);
+    console.log("API Key from env:", API_KEY);
+
     load();
     const id = setInterval(load, POLL_MS);
     return () => clearInterval(id);
