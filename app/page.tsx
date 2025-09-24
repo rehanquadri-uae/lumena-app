@@ -192,7 +192,7 @@ export default function Page() {
                 {floorUnits.map((u) => {
                   const colors = statusColors(u.status);
                   const clickable =
-                    u.status === "Available" || u.status === "On Hold";
+  u.status === "Available" || u.status === "On Hold";
                   return (
                     <div
                       key={u.unit}
