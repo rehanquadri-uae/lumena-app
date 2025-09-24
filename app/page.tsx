@@ -155,7 +155,7 @@ export default function Page() {
               <h2 className="text-xl font-semibold text-gray-700 text-center">
                 Floor {floor}
               </h2>
-              <div className="flex flex-nowrap gap-6 overflow-x-auto pb-2">
+              <div className="flex flex-wrap justify-center gap-6 pb-2">
                 {floorUnits.map((u) => {
                   const colors = statusColors(u.status);
                   const clickable =
