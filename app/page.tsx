@@ -62,13 +62,30 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4">
-      {/* Logo */}
-      <div className="mb-6">
+      {/* Branding Row */}
+      <div className="w-full max-w-2xl flex items-center justify-center mb-8">
+        {/* Logo on Left */}
         <img
-          src="/logo.png"
-          alt="Lumena Logo"
-          className="w-24 h-24 object-contain mx-auto"
+          src="/omniyat-logo.png"
+          alt="Omniyat Logo"
+          className="w-16 h-16 object-contain mr-4"
         />
+
+        {/* Text */}
+        <div className="leading-tight">
+          <div
+            className="text-3xl font-bold"
+            style={{ fontFamily: "Optima, sans-serif" }}
+          >
+            Lumena
+          </div>
+          <div
+            className="text-lg font-normal tracking-wide"
+            style={{ fontFamily: "Optima, sans-serif" }}
+          >
+            By Omniyat
+          </div>
+        </div>
       </div>
 
       {/* Counters Row */}
