@@ -111,37 +111,32 @@ export default function Page() {
   return (
     <main className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto space-y-10">
-    {/* Header with Logo + Branding */}
-<header className="flex justify-center">
-  <div className="flex items-center gap-3 -ml-10"> 
-    {/* 👆 shift block left so text centers visually */}
-    <Image
-      src="/logo.png"
-      alt="Lumena Logo"
-      width={70}
-      height={70}
-      priority
-    />
-    <div className="text-center">
-      <h1
-        className="text-4xl sm:text-6xl font-bold"
-        style={{ fontFamily: "OptimaProBoldItalic", color: "#0A073E" }}
-      >
-        Lumena
-      </h1>
-    <p
-  className="text-xl sm:text-2xl"
-  style={{ fontFamily: "OptimaProMedium", color: "#0A073E" }}
->
-  by Omniyat
-</p>
-
-    </div>
-  </div>
-</header>
-
-
-
+        {/* Header with Logo + Branding */}
+        <header className="flex justify-center">
+          <div className="flex items-center gap-3 -ml-10">
+            <Image
+              src="/logo.png"
+              alt="Lumena Logo"
+              width={70}
+              height={70}
+              priority
+            />
+            <div className="text-center">
+              <h1
+                className="text-4xl sm:text-6xl font-bold"
+                style={{ fontFamily: "OptimaProBoldItalic", color: "#0A073E" }}
+              >
+                Lumena
+              </h1>
+              <p
+                className="text-xl sm:text-2xl"
+                style={{ fontFamily: "OptimaProMedium", color: "#0A073E" }}
+              >
+                by Omniyat
+              </p>
+            </div>
+          </div>
+        </header>
 
         {/* Counters */}
         <section className="flex justify-center">
@@ -188,11 +183,12 @@ export default function Page() {
               <h2 className="text-xl font-semibold text-gray-700 text-center">
                 Floor {floor}
               </h2>
-             <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 lg:gap-5 justify-items-center mx-auto max-w-5xl">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 lg:gap-5 justify-items-center mx-auto max-w-5xl">
                 {floorUnits.map((u) => {
                   const colors = statusColors(u.status);
-                  const clickable =
-  u.status === "Available" || u.status === "On Hold";
+                  const clickable = ["available", "on hold"].includes(
+                    u.status.toLowerCase()
+                  );
                   return (
                     <div
                       key={u.unit}
@@ -216,6 +212,46 @@ export default function Page() {
             </div>
           ))}
         </section>
+
+        {/* Modal */}
+        {selected && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            onClick={() => setSelected(null)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl w-[90vw] max-w-md p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold">Unit {selected.unit}</h3>
+                <button onClick={() => setSelected(null)}>✕</button>
+              </div>
+              <div className="mt-4 space-y-2 text-sm">
+                <p>
+                  <span className="text-gray-500">Type:</span> {selected.type}
+                </p>
+                <p>
+                  <span className="text-gray-500">Area:</span> {selected.area} sqft
+                </p>
+                <p>
+                  <span className="text-gray-500">Parking:</span> {selected.parking}
+                </p>
+                <p>
+                  <span className="text-gray-500">Status:</span> {selected.status}
+                </p>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <button
+                  className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200"
+                  onClick={() => setSelected(null)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
