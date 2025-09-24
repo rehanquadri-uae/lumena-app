@@ -14,7 +14,7 @@ type Unit = {
 
 const SHEET_ID = process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID!;
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY!;
-const SHEET_NAME = "First Release(in)"; // 👈 exact sheet tab name
+const RANGE = "'First Release(in)'!A1:F1000";
 const POLL_MS = 30_000;
 
 /* ---------- Helpers ---------- */
@@ -55,24 +55,14 @@ function statusColors(status: string) {
   }
 }
 
-/* ---------- Fetch with Debug ---------- */
+/* ---------- Fetch ---------- */
 async function fetchUnits(): Promise<Unit[]> {
-  const range = `'${SHEET_NAME}'!A1:F1000`; // raw, with quotes
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
-
-  try {
-    console.log("Fetching Google Sheets URL:", url);
-
-    const res = await fetch(url, { cache: "no-store" });
-    const text = await res.text(); // log raw JSON string
-    console.log("Sheets API Raw Response:", text);
-
-    const data = JSON.parse(text);
-    return rowsToUnits(data.values ?? []);
-  } catch (err) {
-    console.error("Sheets API fetch failed:", err);
-    return [];
-  }
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(
+    RANGE
+  )}?key=${API_KEY}`;
+  const res = await fetch(url, { cache: "no-store" });
+  const data: { values?: string[][] } = await res.json();
+  return rowsToUnits(data.values ?? []);
 }
 
 /* ---------- Page ---------- */
@@ -92,9 +82,6 @@ export default function Page() {
   }
 
   useEffect(() => {
-    console.log("Sheet ID from env:", SHEET_ID);
-    console.log("API Key from env:", API_KEY);
-
     load();
     const id = setInterval(load, POLL_MS);
     return () => clearInterval(id);
@@ -131,28 +118,26 @@ export default function Page() {
 
         {/* Counters */}
         <section className="flex justify-center">
-          <div className="flex divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-12 py-6">
-            <div className="px-6 text-center">
+          <div className="flex divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-6 py-4 sm:px-12 sm:py-6">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500">Total</p>
-              <p className="text-3xl font-semibold">{counts.total}</p>
+              <p className="text-2xl sm:text-3xl font-semibold">{counts.total}</p>
             </div>
-            <div className="px-6 text-center">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500">Available</p>
-              <p className="text-3xl font-semibold text-green-600">
-                {counts.available}
-              </p>
+              <p className="text-2xl sm:text-3xl font-semibold text-green-600">{counts.available}</p>
             </div>
-            <div className="px-6 text-center">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500">On Hold</p>
-              <p className="text-3xl font-semibold text-amber-600">{counts.hold}</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-amber-600">{counts.hold}</p>
             </div>
-            <div className="px-6 text-center">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500">Booked</p>
-              <p className="text-3xl font-semibold text-blue-600">{counts.booked}</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-blue-600">{counts.booked}</p>
             </div>
-            <div className="px-6 text-center">
+            <div className="px-4 sm:px-6 text-center">
               <p className="text-sm text-gray-500">Sold</p>
-              <p className="text-3xl font-semibold text-red-600">{counts.sold}</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-red-600">{counts.sold}</p>
             </div>
           </div>
         </section>
@@ -166,7 +151,7 @@ export default function Page() {
               <h2 className="text-xl font-semibold text-gray-700 text-center">
                 Floor {floor}
               </h2>
-              <div className="flex flex-wrap justify-center gap-6">
+              <div className="flex gap-6 overflow-x-auto justify-center sm:justify-center no-scrollbar">
                 {floorUnits.map((u) => {
                   const colors = statusColors(u.status);
                   const clickable =
@@ -175,7 +160,7 @@ export default function Page() {
                     <div
                       key={u.unit}
                       onClick={() => (clickable ? setSelected(u) : null)}
-                      className={`relative w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
+                      className={`relative flex-shrink-0 w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
                         clickable ? "cursor-pointer hover:shadow-lg" : ""
                       }`}
                     >
