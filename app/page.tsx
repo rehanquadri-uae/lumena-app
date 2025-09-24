@@ -111,30 +111,33 @@ export default function Page() {
   return (
     <main className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto space-y-10">
-        {/* Header with Logo + Branding */}
-        <header className="flex items-center justify-center gap-4">
-          <Image
-            src="/logo.png"
-            alt="Lumena Logo"
-            width={80}
-            height={80}
-            priority
-          />
-          <div className="text-center sm:text-left">
-            <h1
-              className="text-3xl sm:text-5xl text-gray-900"
-              style={{ fontFamily: "OptimaProBoldItalic" }}
-            >
-              Lumena
-            </h1>
-            <p
-              className="text-sm sm:text-lg text-gray-500"
-              style={{ fontFamily: "OptimaProMedium" }}
-            >
-              by Omniyat
-            </p>
-          </div>
-        </header>
+       {/* Header with Logo + Branding */}
+<header className="flex flex-col items-center space-y-2 sm:space-y-3">
+  <div className="flex items-center justify-center gap-3">
+    <Image
+      src="/logo.png"
+      alt="Lumena Logo"
+      width={60}
+      height={60}
+      priority
+    />
+    <div className="text-center">
+      <h1
+        className="text-3xl sm:text-5xl text-gray-900"
+        style={{ fontFamily: "OptimaProBoldItalic" }}
+      >
+        Lumena
+      </h1>
+      <p
+        className="text-sm sm:text-lg text-gray-500"
+        style={{ fontFamily: "OptimaProMedium" }}
+      >
+        by Omniyat
+      </p>
+    </div>
+  </div>
+</header>
+
 
         {/* Counters */}
         <section className="flex justify-center">
