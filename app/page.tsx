@@ -31,7 +31,7 @@ export default function Page() {
     <main className="min-h-screen bg-white flex flex-col items-center justify-start p-6">
       {/* Header above counters */}
       <div className="w-full max-w-6xl mb-8">
-        <div className="flex items-start gap-4 justify-start">
+        <div className="flex items-center gap-4 justify-start">
           {/* Omniyat Logo (left) */}
           <Image
             src="/logo.png"
@@ -41,10 +41,10 @@ export default function Page() {
             className="object-contain"
           />
 
-          {/* Lumena + By Omniyat (right of logo, slightly raised) */}
-          <div className="flex flex-col -mt-1">
+          {/* Lumena + By Omniyat (beside logo) */}
+          <div className="flex flex-col">
             <h1
-              className="font-medium"
+              className="font-medium text-black"
               style={{
                 fontFamily: "Optima, Optima Pro, sans-serif",
                 fontSize: "1.75rem",
@@ -54,6 +54,7 @@ export default function Page() {
               Lumena
             </h1>
             <p
+              className="text-black"
               style={{
                 fontFamily: "Optima, Optima Pro, sans-serif",
                 fontSize: "1.2rem",
@@ -80,16 +81,18 @@ export default function Page() {
         ))}
       </div>
 
-      {/* Units Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="bg-white border rounded-xl shadow-sm p-4 flex items-center justify-center"
-          >
-            Unit {i + 1}
-          </div>
-        ))}
+      {/* Units Row (always in one row, scrollable on mobile) */}
+      <div className="w-full max-w-6xl overflow-x-auto">
+        <div className="flex gap-4 min-w-max">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white border rounded-xl shadow-sm p-4 flex items-center justify-center w-40"
+            >
+              Unit {i + 1}
+            </div>
+          ))}
+        </div>
       </div>
     </main>
   );
