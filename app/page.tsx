@@ -36,6 +36,7 @@ export default function Page() {
           booked = 0,
           sold = 0;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         rows.forEach((row: any) => {
           const status = row.c[1]?.v; // Column 2 = Status
           if (status === "Available") available++;
