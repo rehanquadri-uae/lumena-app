@@ -111,17 +111,18 @@ export default function Page() {
   return (
     <main className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto space-y-10">
-      {/* Header with Logo + Branding */}
-<header className="flex flex-col items-center sm:items-start space-y-2 sm:space-y-3">
-  <div className="flex items-center justify-center sm:justify-start gap-3 -ml-6">
+    {/* Header with Logo + Branding */}
+<header className="flex justify-center">
+  <div className="flex items-center gap-3 -ml-10"> 
+    {/* 👆 shift block left so text centers visually */}
     <Image
       src="/logo.png"
       alt="Lumena Logo"
-      width={60}
-      height={60}
+      width={70}
+      height={70}
       priority
     />
-    <div className="text-center sm:text-left">
+    <div className="text-center">
       <h1
         className="text-4xl sm:text-6xl font-bold"
         style={{ fontFamily: "OptimaProBoldItalic", color: "#0A073E" }}
@@ -129,7 +130,7 @@ export default function Page() {
         Lumena
       </h1>
       <p
-        className="text-base sm:text-xl"
+        className="text-lg sm:text-xl"
         style={{ fontFamily: "OptimaProMedium", color: "#0A073E" }}
       >
         by Omniyat
@@ -137,6 +138,7 @@ export default function Page() {
     </div>
   </div>
 </header>
+
 
 
 
