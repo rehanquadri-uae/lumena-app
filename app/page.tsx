@@ -34,7 +34,7 @@ export default function Page() {
         <div className="flex items-start gap-4">
           {/* Omniyat Logo (left) */}
           <Image
-            src="/omniyat-logo.png"
+            src="/logo.png"   // ✅ fixed filename
             alt="Omniyat Logo"
             width={120}
             height={40}
