@@ -61,12 +61,8 @@ async function fetchUnits(): Promise<Unit[]> {
     RANGE
   )}?key=${API_KEY}`;
 
-  console.log("👉 Fetching Google Sheets URL:", url); // debug log
-
   const res = await fetch(url, { cache: "no-store" });
   const data: { values?: string[][] } = await res.json();
-
-  console.log("👉 Google Sheets Response:", data); // debug log
 
   return rowsToUnits(data.values ?? []);
 }
@@ -116,14 +112,14 @@ export default function Page() {
 
   return (
     <main className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-5xl mx-auto space-y-10">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Header with Logo */}
-        <header className="flex justify-center">
+        <header className="flex justify-center mb-4">
           <Image src="/logo.png" alt="Lumena Logo" width={160} height={60} priority />
         </header>
 
         {/* Counters */}
-        <section className="flex justify-center">
+        <section className="flex justify-center mb-4">
           <div className="flex divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-12 py-6">
             <div className="px-6 text-center">
               <p className="text-sm text-gray-500">Total</p>
@@ -153,13 +149,12 @@ export default function Page() {
         {loading && <p className="text-center text-gray-500">Loading…</p>}
 
         {/* Floors */}
-        <section className="space-y-10">
+        <section className="space-y-8">
           {grouped.map(([floor, floorUnits]) => (
             <div key={floor} className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-700 text-center">
                 Floor {floor}
               </h2>
-              {/* ✅ One row per floor with horizontal scroll */}
               <div className="flex flex-nowrap gap-6 overflow-x-auto pb-2">
                 {floorUnits.map((u) => {
                   const colors = statusColors(u.status);
