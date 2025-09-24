@@ -111,33 +111,45 @@ export default function Page() {
   return (
     <main className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-5xl mx-auto space-y-10">
-        {/* Header with Logo */}
-        <header className="flex justify-center">
-          <Image src="/logo.png" alt="Lumena Logo" width={160} height={60} priority />
+        {/* Header with Logo + Branding */}
+        <header className="flex items-center justify-center gap-4">
+          <Image
+            src="/logo.png"
+            alt="Lumena Logo"
+            width={80}
+            height={80}
+            priority
+          />
+          <div className="text-center sm:text-left">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+              Lumena
+            </h1>
+            <p className="text-sm sm:text-base text-gray-500">by Omniyat</p>
+          </div>
         </header>
 
         {/* Counters */}
         <section className="flex justify-center">
-          <div className="flex flex-wrap justify-center divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-4 sm:px-8 py-4 max-w-full">
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500">Total</p>
-              <p className="text-3xl font-semibold">{counts.total}</p>
+          <div className="flex flex-wrap justify-center divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-2 sm:px-8 py-4 max-w-full">
+            <div className="px-3 sm:px-6 text-center">
+              <p className="text-xs sm:text-sm text-gray-500">Total</p>
+              <p className="text-xl sm:text-3xl font-semibold">{counts.total}</p>
             </div>
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500">Available</p>
-              <p className="text-3xl font-semibold text-green-600">{counts.available}</p>
+            <div className="px-3 sm:px-6 text-center">
+              <p className="text-xs sm:text-sm text-gray-500">Available</p>
+              <p className="text-xl sm:text-3xl font-semibold text-green-600">{counts.available}</p>
             </div>
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500 whitespace-nowrap">On Hold</p>
-              <p className="text-3xl font-semibold text-amber-600">{counts.hold}</p>
+            <div className="px-3 sm:px-6 text-center">
+              <p className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">On Hold</p>
+              <p className="text-xl sm:text-3xl font-semibold text-amber-600">{counts.hold}</p>
             </div>
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500">Booked</p>
-              <p className="text-3xl font-semibold text-blue-600">{counts.booked}</p>
+            <div className="px-3 sm:px-6 text-center">
+              <p className="text-xs sm:text-sm text-gray-500">Booked</p>
+              <p className="text-xl sm:text-3xl font-semibold text-blue-600">{counts.booked}</p>
             </div>
-            <div className="px-4 sm:px-6 text-center">
-              <p className="text-sm text-gray-500">Sold</p>
-              <p className="text-3xl font-semibold text-red-600">{counts.sold}</p>
+            <div className="px-3 sm:px-6 text-center">
+              <p className="text-xs sm:text-sm text-gray-500">Sold</p>
+              <p className="text-xl sm:text-3xl font-semibold text-red-600">{counts.sold}</p>
             </div>
           </div>
         </section>
