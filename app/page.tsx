@@ -27,12 +27,11 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const sheetId = "1iU0hB0vjj9B7qbf5Niu_YqsdfBrn0CaFd4HLjkS-_tI"; // replace with your real sheet ID
+        const sheetId = "1iU0hB0vjj9B7qbf5Niu_YqsdfBrn0CaFd4HLjkS-_tI"; // your sheet ID
         const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
         const res = await fetch(url);
         const text = await res.text();
-
         const json = JSON.parse(text.substring(47).slice(0, -2));
         const rows = json.table.rows;
 
@@ -41,25 +40,44 @@ export default function Home() {
           booked = 0,
           sold = 0;
 
-        // ✅ disable lint check just for this loop
+        const units: Unit[] = [];
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        rows.forEach((row: any) => {
-          const status = row.c[1]?.v;
+        rows.forEach((row: any, index: number) => {
+          const name = row.c[0]?.v; // Unit name in column A
+          const status = row.c[1]?.v; // Status in column B
+          const floor = parseInt(row.c[2]?.v); // Floor number in column C
+
+          if (!name || !status || isNaN(floor)) return;
+
           if (status === "Available") available++;
           if (status === "On Hold") onHold++;
           if (status === "Booked") booked++;
           if (status === "Sold") sold++;
+
+          units.push({
+            id: index,
+            name,
+            status,
+            floor,
+          });
         });
 
         const total = available + onHold + booked + sold;
 
-        setStats({
-          total,
-          available,
-          onHold,
-          booked,
-          sold,
+        // Group units by floor
+        const grouped: Floor[] = [];
+        units.forEach((unit) => {
+          let floorGroup = grouped.find((f) => f.number === unit.floor);
+          if (!floorGroup) {
+            floorGroup = { number: unit.floor, units: [] };
+            grouped.push(floorGroup);
+          }
+          floorGroup.units.push(unit);
         });
+
+        setStats({ total, available, onHold, booked, sold });
+        setFloors(grouped.sort((a, b) => a.number - b.number));
       } catch (err) {
         console.error("Error fetching sheet data:", err);
       }
@@ -81,7 +99,7 @@ export default function Home() {
         />
       </div>
 
-      {/* Counters Row (inside white card, centered like old layout) */}
+      {/* Counters Row */}
       <div className="grid grid-cols-5 gap-2 sm:gap-4 w-full max-w-2xl mx-auto text-center bg-white shadow-md rounded-2xl py-4 px-2 mb-10">
         <div>
           <div className="text-sm font-medium">Total</div>
@@ -107,7 +125,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Floors & Units (same as your screenshot) */}
+      {/* Floors & Units */}
       <div className="w-full max-w-6xl">
         {floors.map((floor) => (
           <div key={floor.number} className="mb-10">
