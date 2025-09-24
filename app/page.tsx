@@ -1,99 +1,223 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 
-interface Counter {
-  label: string;
-  value: number;
-  color: string;
+type Unit = {
+  unit: string;
+  floor: string;
+  type: string;
+  area: string;
+  parking: string;
+  status: "Available" | "On Hold" | "Booked" | "Sold" | string;
+};
+
+const SHEET_ID = process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID!;
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY!;
+const RANGE = "'First Release(in)'!A1:F1000";
+const POLL_MS = 30_000;
+
+/* ---------- Helpers ---------- */
+function normalizeStatus(raw: string | undefined): Unit["status"] {
+  const s = (raw ?? "").toLowerCase().trim();
+  if (["available", "avail"].includes(s)) return "Available";
+  if (["hold", "on hold", "on-hold"].includes(s)) return "On Hold";
+  if (["booked", "reserve", "reserved"].includes(s)) return "Booked";
+  if (["sold", "closed"].includes(s)) return "Sold";
+  return (raw ?? "").toString();
 }
 
+function rowsToUnits(rows: string[][]): Unit[] {
+  if (!rows || rows.length === 0) return [];
+  const [header, ...values] = rows;
+  const keys = header.map((h) => h.trim().toLowerCase());
+
+  return values.map((row) => {
+    const obj: Record<string, string> = {};
+    keys.forEach((k, i) => (obj[k] = (row[i] ?? "").toString().trim()));
+    obj["status"] = normalizeStatus(obj["status"]);
+    return obj as Unit;
+  });
+}
+
+function statusColors(status: string) {
+  switch (status) {
+    case "Available":
+      return { border: "border-green-500", badge: "bg-green-500 text-white" };
+    case "On Hold":
+      return { border: "border-amber-500", badge: "bg-amber-500 text-white" };
+    case "Booked":
+      return { border: "border-blue-500", badge: "bg-blue-500 text-white" };
+    case "Sold":
+      return { border: "border-red-500", badge: "bg-red-500 text-white" };
+    default:
+      return { border: "border-gray-300", badge: "bg-gray-400 text-white" };
+  }
+}
+
+/* ---------- Fetch ---------- */
+async function fetchUnits(): Promise<Unit[]> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(
+    RANGE
+  )}?key=${API_KEY}`;
+  const res = await fetch(url, { cache: "no-store" });
+  const data: { values?: string[][] } = await res.json();
+  return rowsToUnits(data.values ?? []);
+}
+
+/* ---------- Page ---------- */
 export default function Page() {
-  const [counters, setCounters] = useState<Counter[]>([
-    { label: "Total", value: 120, color: "text-gray-900" },
-    { label: "Available", value: 45, color: "text-green-600" },
-    { label: "On Hold", value: 15, color: "text-amber-600" },
-    { label: "Booked", value: 20, color: "text-blue-600" },
-    { label: "Sold", value: 40, color: "text-red-600" },
-  ]);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Unit | null>(null);
+
+  async function load() {
+    try {
+      setLoading(true);
+      const data = await fetchUnits();
+      setUnits(data);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      console.log("Auto-refresh triggered");
-      // Fetch fresh data here
-    }, 30000);
-
-    return () => clearInterval(interval);
+    load();
+    const id = setInterval(load, POLL_MS);
+    return () => clearInterval(id);
   }, []);
 
+  const counts = useMemo(() => {
+    const c = { total: units.length, available: 0, hold: 0, booked: 0, sold: 0 };
+    for (const u of units) {
+      if (u.status === "Available") c.available++;
+      else if (u.status === "On Hold") c.hold++;
+      else if (u.status === "Booked") c.booked++;
+      else if (u.status === "Sold") c.sold++;
+    }
+    return c;
+  }, [units]);
+
+  // group by floor
+  const grouped = useMemo(() => {
+    const map: Record<string, Unit[]> = {};
+    units.forEach((u) => {
+      if (!map[u.floor]) map[u.floor] = [];
+      map[u.floor].push(u);
+    });
+    return Object.entries(map).sort((a, b) => Number(a[0]) - Number(b[0]));
+  }, [units]);
+
   return (
-    <main className="min-h-screen bg-white flex flex-col items-center justify-start p-6">
-      {/* Header above counters */}
-      <div className="w-full max-w-6xl mb-8">
-        <div className="flex items-center gap-4 justify-start">
-          {/* Omniyat Logo (left) */}
-          <Image
-            src="/logo.png"
-            alt="Omniyat Logo"
-            width={120}
-            height={40}
-            className="object-contain"
-          />
+    <main className="p-8 bg-gray-50 min-h-screen">
+      <div className="max-w-5xl mx-auto space-y-10">
+        {/* Header with Logo */}
+        <header className="flex justify-center">
+          <Image src="/logo.png" alt="Lumena Logo" width={160} height={60} priority />
+        </header>
 
-          {/* Lumena + By Omniyat (beside logo) */}
-          <div className="flex flex-col">
-            <h1
-              className="font-medium text-black"
-              style={{
-                fontFamily: "Optima, Optima Pro, sans-serif",
-                fontSize: "1.75rem",
-                fontWeight: 600,
-              }}
-            >
-              Lumena
-            </h1>
-            <p
-              className="text-black"
-              style={{
-                fontFamily: "Optima, Optima Pro, sans-serif",
-                fontSize: "1.2rem",
-              }}
-            >
-              By Omniyat
-            </p>
+        {/* Counters */}
+        <section className="flex justify-center">
+          <div className="flex divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-6 py-4 sm:px-12 sm:py-6">
+            <div className="px-4 sm:px-6 text-center">
+              <p className="text-sm text-gray-500">Total</p>
+              <p className="text-2xl sm:text-3xl font-semibold">{counts.total}</p>
+            </div>
+            <div className="px-4 sm:px-6 text-center">
+              <p className="text-sm text-gray-500">Available</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-green-600">{counts.available}</p>
+            </div>
+            <div className="px-4 sm:px-6 text-center">
+              <p className="text-sm text-gray-500">On Hold</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-amber-600">{counts.hold}</p>
+            </div>
+            <div className="px-4 sm:px-6 text-center">
+              <p className="text-sm text-gray-500">Booked</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-blue-600">{counts.booked}</p>
+            </div>
+            <div className="px-4 sm:px-6 text-center">
+              <p className="text-sm text-gray-500">Sold</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-red-600">{counts.sold}</p>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Counters */}
-      <div className="flex flex-wrap justify-center gap-6 mb-10">
-        {counters.map((counter) => (
-          <div
-            key={counter.label}
-            className="bg-gray-50 rounded-2xl shadow-md p-6 w-40 text-center"
-          >
-            <p className={`text-3xl font-bold ${counter.color}`}>
-              {counter.value}
-            </p>
-            <p className="text-gray-600 mt-1">{counter.label}</p>
-          </div>
-        ))}
-      </div>
+        {loading && <p className="text-center text-gray-500">Loading…</p>}
 
-      {/* Units Row (always in one row, scrollable on mobile) */}
-      <div className="w-full max-w-6xl overflow-x-auto">
-        <div className="flex gap-4 min-w-max">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-white border rounded-xl shadow-sm p-4 flex items-center justify-center w-40"
-            >
-              Unit {i + 1}
+        {/* Floors */}
+        <section className="space-y-10">
+          {grouped.map(([floor, floorUnits]) => (
+            <div key={floor} className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-700 text-center">
+                Floor {floor}
+              </h2>
+              <div className="flex gap-6 overflow-x-auto justify-center sm:justify-center no-scrollbar">
+                {floorUnits.map((u) => {
+                  const colors = statusColors(u.status);
+                  const clickable =
+                    u.status === "Available" || u.status === "On Hold";
+                  return (
+                    <div
+                      key={u.unit}
+                      onClick={() => (clickable ? setSelected(u) : null)}
+                      className={`relative flex-shrink-0 w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
+                        clickable ? "cursor-pointer hover:shadow-lg" : ""
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full ${colors.badge}`}
+                      >
+                        {u.status}
+                      </span>
+                      <span className="text-lg font-semibold">Unit {u.unit}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ))}
-        </div>
+        </section>
       </div>
+
+      {/* Modal */}
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-[90vw] max-w-md p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-semibold">Unit {selected.unit}</h3>
+              <button onClick={() => setSelected(null)}>✕</button>
+            </div>
+            <div className="mt-4 space-y-2 text-sm">
+              <p>
+                <span className="text-gray-500">Type:</span> {selected.type}
+              </p>
+              <p>
+                <span className="text-gray-500">Area:</span> {selected.area} sqft
+              </p>
+              <p>
+                <span className="text-gray-500">Parking:</span> {selected.parking}
+              </p>
+              <p>
+                <span className="text-gray-500">Status:</span> {selected.status}
+              </p>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200"
+                onClick={() => setSelected(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
