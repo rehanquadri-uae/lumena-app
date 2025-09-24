@@ -109,47 +109,41 @@ export default function Page() {
   }, [units]);
 
   return (
-    <main className="p-4 sm:p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-5xl mx-auto space-y-10">
+    <main className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-6xl mx-auto space-y-10">
         {/* Header with Logo + Branding */}
-        <header className="flex items-center justify-center gap-4">
-          <Image
-            src="/logo.png"
-            alt="Lumena Logo"
-            width={80}
-            height={80}
-            priority
-          />
+        <header className="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4 justify-center">
+          <Image src="/logo.png" alt="Lumena Logo" width={70} height={70} priority />
           <div className="text-center sm:text-left">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-              Lumena
-            </h1>
-            <p className="text-sm sm:text-base text-gray-500">by Omniyat</p>
+            <h1 className="text-4xl font-serif tracking-wide text-gray-900">Lumena</h1>
+            <p className="text-sm text-gray-500">by Omniyat</p>
           </div>
         </header>
 
         {/* Counters */}
         <section className="flex justify-center">
-          <div className="flex flex-wrap justify-center divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-2 sm:px-8 py-4 max-w-full">
-            <div className="px-3 sm:px-6 text-center">
-              <p className="text-xs sm:text-sm text-gray-500">Total</p>
-              <p className="text-xl sm:text-3xl font-semibold">{counts.total}</p>
+          <div className="flex flex-wrap justify-center divide-x divide-gray-200 bg-white shadow-md rounded-2xl px-6 py-4 w-full max-w-3xl">
+            <div className="px-4 text-center">
+              <p className="text-sm text-gray-500">Total</p>
+              <p className="text-2xl sm:text-3xl font-semibold">{counts.total}</p>
             </div>
-            <div className="px-3 sm:px-6 text-center">
-              <p className="text-xs sm:text-sm text-gray-500">Available</p>
-              <p className="text-xl sm:text-3xl font-semibold text-green-600">{counts.available}</p>
+            <div className="px-4 text-center">
+              <p className="text-sm text-gray-500">Available</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-green-600">
+                {counts.available}
+              </p>
             </div>
-            <div className="px-3 sm:px-6 text-center">
-              <p className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">On Hold</p>
-              <p className="text-xl sm:text-3xl font-semibold text-amber-600">{counts.hold}</p>
+            <div className="px-4 text-center">
+              <p className="text-sm text-gray-500 whitespace-nowrap">On Hold</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-amber-600">{counts.hold}</p>
             </div>
-            <div className="px-3 sm:px-6 text-center">
-              <p className="text-xs sm:text-sm text-gray-500">Booked</p>
-              <p className="text-xl sm:text-3xl font-semibold text-blue-600">{counts.booked}</p>
+            <div className="px-4 text-center">
+              <p className="text-sm text-gray-500">Booked</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-blue-600">{counts.booked}</p>
             </div>
-            <div className="px-3 sm:px-6 text-center">
-              <p className="text-xs sm:text-sm text-gray-500">Sold</p>
-              <p className="text-xl sm:text-3xl font-semibold text-red-600">{counts.sold}</p>
+            <div className="px-4 text-center">
+              <p className="text-sm text-gray-500">Sold</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-red-600">{counts.sold}</p>
             </div>
           </div>
         </section>
@@ -163,7 +157,8 @@ export default function Page() {
               <h2 className="text-xl font-semibold text-gray-700 text-center">
                 Floor {floor}
               </h2>
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center">
+              {/* Responsive grid: 3–4 per row across all devices */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
                 {floorUnits.map((u) => {
                   const colors = statusColors(u.status);
                   const clickable =
@@ -172,7 +167,7 @@ export default function Page() {
                     <div
                       key={u.unit}
                       onClick={() => (clickable ? setSelected(u) : null)}
-                      className={`relative w-28 sm:w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
+                      className={`relative w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
                         clickable ? "cursor-pointer hover:shadow-lg" : ""
                       }`}
                     >
@@ -181,9 +176,7 @@ export default function Page() {
                       >
                         {u.status}
                       </span>
-                      <span className="text-sm sm:text-lg font-semibold">
-                        Unit {u.unit}
-                      </span>
+                      <span className="text-lg font-semibold">Unit {u.unit}</span>
                     </div>
                   );
                 })}
