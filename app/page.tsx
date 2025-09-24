@@ -110,7 +110,7 @@ export default function Page() {
 
   return (
     <main className="p-4 sm:p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-5xl mx-auto space-y-10">
+      <div className="max-w-6xl mx-auto space-y-10">
         {/* Header with Logo + Branding */}
         <header className="flex items-center justify-center gap-4">
           <Image
@@ -121,10 +121,18 @@ export default function Page() {
             priority
           />
           <div className="text-center sm:text-left">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+            <h1
+              className="text-3xl sm:text-5xl text-gray-900"
+              style={{ fontFamily: "OptimaProBoldItalic" }}
+            >
               Lumena
             </h1>
-            <p className="text-sm sm:text-base text-gray-500">by Omniyat</p>
+            <p
+              className="text-sm sm:text-lg text-gray-500"
+              style={{ fontFamily: "OptimaProMedium" }}
+            >
+              by Omniyat
+            </p>
           </div>
         </header>
 
@@ -137,19 +145,29 @@ export default function Page() {
             </div>
             <div className="px-3 sm:px-6 text-center">
               <p className="text-xs sm:text-sm text-gray-500">Available</p>
-              <p className="text-xl sm:text-3xl font-semibold text-green-600">{counts.available}</p>
+              <p className="text-xl sm:text-3xl font-semibold text-green-600">
+                {counts.available}
+              </p>
             </div>
             <div className="px-3 sm:px-6 text-center">
-              <p className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">On Hold</p>
-              <p className="text-xl sm:text-3xl font-semibold text-amber-600">{counts.hold}</p>
+              <p className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
+                On Hold
+              </p>
+              <p className="text-xl sm:text-3xl font-semibold text-amber-600">
+                {counts.hold}
+              </p>
             </div>
             <div className="px-3 sm:px-6 text-center">
               <p className="text-xs sm:text-sm text-gray-500">Booked</p>
-              <p className="text-xl sm:text-3xl font-semibold text-blue-600">{counts.booked}</p>
+              <p className="text-xl sm:text-3xl font-semibold text-blue-600">
+                {counts.booked}
+              </p>
             </div>
             <div className="px-3 sm:px-6 text-center">
               <p className="text-xs sm:text-sm text-gray-500">Sold</p>
-              <p className="text-xl sm:text-3xl font-semibold text-red-600">{counts.sold}</p>
+              <p className="text-xl sm:text-3xl font-semibold text-red-600">
+                {counts.sold}
+              </p>
             </div>
           </div>
         </section>
@@ -163,7 +181,7 @@ export default function Page() {
               <h2 className="text-xl font-semibold text-gray-700 text-center">
                 Floor {floor}
               </h2>
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-center justify-items-center">
                 {floorUnits.map((u) => {
                   const colors = statusColors(u.status);
                   const clickable =
@@ -192,46 +210,6 @@ export default function Page() {
           ))}
         </section>
       </div>
-
-      {/* Modal */}
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-[90vw] max-w-md p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-semibold">Unit {selected.unit}</h3>
-              <button onClick={() => setSelected(null)}>✕</button>
-            </div>
-            <div className="mt-4 space-y-2 text-sm">
-              <p>
-                <span className="text-gray-500">Type:</span> {selected.type}
-              </p>
-              <p>
-                <span className="text-gray-500">Area:</span> {selected.area} sqft
-              </p>
-              <p>
-                <span className="text-gray-500">Parking:</span> {selected.parking}
-              </p>
-              <p>
-                <span className="text-gray-500">Status:</span> {selected.status}
-              </p>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200"
-                onClick={() => setSelected(null)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
