@@ -176,42 +176,45 @@ export default function Page() {
 
         {loading && <p className="text-center text-gray-500">Loading…</p>}
 
-        {/* Floors */}
-        <section className="space-y-10">
-          {grouped.map(([floor, floorUnits]) => (
-            <div key={floor} className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-700 text-center">
-                Floor {floor}
-              </h2>
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 lg:gap-5 justify-items-center mx-auto max-w-4xl lg:max-w-5xl">
-                {floorUnits.map((u) => {
-                  const colors = statusColors(u.status);
-                  const clickable = ["available", "on hold"].includes(
-                    u.status.toLowerCase()
-                  );
-                  return (
-                    <div
-                      key={u.unit}
-                      onClick={() => (clickable ? setSelected(u) : null)}
-                      className={`relative w-28 sm:w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
-                        clickable ? "cursor-pointer hover:shadow-lg" : ""
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full ${colors.badge} whitespace-nowrap`}
-                      >
-                        {u.status}
-                      </span>
-                      <span className="text-sm sm:text-lg font-semibold">
-                        Unit {u.unit}
-                      </span>
-                    </div>
-                  );
-                })}
+       {/* Floors */}
+<section className="space-y-10">
+  {grouped.map(([floor, floorUnits]) => (
+    <div key={floor} className="space-y-4">
+      <h2 className="text-xl font-semibold text-gray-700 text-center">
+        Floor {floor}
+      </h2>
+      {/* Wrapper flex ensures center alignment */}
+      <div className="flex justify-center">
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 lg:gap-5">
+          {floorUnits.map((u) => {
+            const colors = statusColors(u.status);
+            const clickable =
+              u.status === "Available" || u.status === "On Hold";
+            return (
+              <div
+                key={u.unit}
+                onClick={() => (clickable ? setSelected(u) : null)}
+                className={`relative w-28 sm:w-32 h-20 flex items-center justify-center bg-white rounded-xl shadow border-2 ${colors.border} ${
+                  clickable ? "cursor-pointer hover:shadow-lg" : ""
+                }`}
+              >
+                <span
+                  className={`absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full ${colors.badge} whitespace-nowrap`}
+                >
+                  {u.status}
+                </span>
+                <span className="text-sm sm:text-lg font-semibold">
+                  Unit {u.unit}
+                </span>
               </div>
-            </div>
-          ))}
-        </section>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  ))}
+</section>
+
 
         {/* Modal */}
         {selected && (
