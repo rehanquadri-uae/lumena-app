@@ -184,7 +184,7 @@ export default function Page() {
       </h2>
       {/* ✅ Wrapper flex keeps everything centered */}
       <div className="flex justify-center">
-        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 lg:gap-5 place-items-center">
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 place-items-center">
           {floorUnits.map((u) => {
             const colors = statusColors(u.status);
             const clickable =
