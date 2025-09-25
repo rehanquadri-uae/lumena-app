@@ -182,7 +182,7 @@ export default function Page() {
       <h2 className="text-xl font-semibold text-gray-700 text-center">
         Floor {floor}
       </h2>
-      {/* ✅ Wrapper ensures perfect centering */}
+      {/* ✅ Wrapper flex keeps everything centered */}
       <div className="flex justify-center">
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 lg:gap-5 max-w-fit">
           {floorUnits.map((u) => {
