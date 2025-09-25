@@ -117,8 +117,8 @@ export default function Page() {
             <Image
               src="/logo.png"
               alt="Lumena Logo"
-              width={70}
-              height={70}
+              width={100}
+              height={100}
               priority
             />
             <div className="text-center">
